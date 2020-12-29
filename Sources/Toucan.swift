@@ -153,6 +153,13 @@ public class Toucan : NSObject {
              Scales the image to fit the constraining dimensions exactly.
              */
             case scale
+            
+            /**
+             Resizes the image to fit within the width and height boundaries without cropping or scaling the image.
+             Remaning space is transparent
+             */
+            
+            case fit
         }
         
         /**
@@ -173,7 +180,7 @@ public class Toucan : NSObject {
             let widthRatio = size.width / originalWidth
             let heightRatio = size.height / originalHeight
             
-            let scaleRatio = fitMode == .clip ? min(heightRatio, widthRatio) : max(heightRatio, widthRatio)
+            let scaleRatio = fitMode == .clip || fitMode == .fit ? min(heightRatio, widthRatio) : max(heightRatio, widthRatio)
             
             let resizedImageBounds = CGRect(x: 0, y: 0, width: round(originalWidth * scaleRatio), height: round(originalHeight * scaleRatio))
             let resizedImage = Util.drawImageInBounds(image, bounds: resizedImageBounds)
@@ -184,6 +191,22 @@ public class Toucan : NSObject {
             switch (fitMode) {
             case .clip:
                 return resizedImage
+            case .fit:
+                guard let resImage = resizedImage else {return nil}
+                
+                UIGraphicsBeginImageContext(size)
+                
+                // Color fill...
+                //UIColor.white.setFill()
+                //UIRectFill(CGRect(origin: CGPoint.zero, size: size))
+
+                resImage.draw(in: CGRect(x: (size.width - resImage.size.width)/2, y: (size.height - resImage.size.height)/2, width: resImage.size.width, height: resImage.size.height), blendMode: .normal, alpha: 1.0)
+
+                let mergedImage = UIGraphicsGetImageFromCurrentImageContext()
+                
+                UIGraphicsEndImageContext()
+                
+                return mergedImage
             case .crop:
                 let croppedRect = CGRect(x: (resizedImage!.size.width - size.width) / 2,
                                          y: (resizedImage!.size.height - size.height) / 2,
